@@ -1,0 +1,18 @@
+.classpath
+ project.properties
+ *.project
+ .settings/
+ *.iml
+ *.jar
+ *.bat
+ .idea/
+ *.prefs
+ gradle/
+ *.apk
+ .idea/*
+bin/
+gen/
+build/
+.gradle/
+.DS_Store
+.cxx/
