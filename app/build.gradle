@@ -18,6 +18,7 @@ android {
                 cppFlags ""
                 //arguments "-DANDROID_ARM_NEON=TRUE", "-DANDROID_PLATFORM=android-21", "-DANDROID_STL=c++_shared"
                 //abiFilters "armeabi"//, "armeabi-v7a" //, "arm64-v8a", "x86", "x86_64", "mips", "mips64"
+                abiFilters 'x86', 'x86_64', 'arm64-v8a', 'armeabi-v7a'
             }
         }
     }
@@ -35,6 +36,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.config
         }
+        debug {
+
+        }
     }
 
     externalNativeBuild {
@@ -47,8 +51,41 @@ android {
         sourceCompatibility 1.8
         targetCompatibility 1.8
     }
-}
 
+
+    android.applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "coco_" + defaultConfig.versionCode + "_v" + defaultConfig.versionName + "_" + buildType.name + ".apk"
+        }
+    }
+    task installSdcard (dependsOn: ':app:assembleDebug') {
+        def apkName = "app-debug.apk" //记得修改成你的APK名称，这个是默认的debug名称
+
+        def apkoutput = file("build/outputs/apk/debug/${apkName}")
+        def isApkExist = apkoutput.exists()
+        if (isApkExist) {
+            apkoutput.delete()
+        }
+
+        doLast{
+            if (!apkoutput.exists()) {
+                println "Apk file not exist， PATH:${apkoutput.path}"
+                return
+            }
+
+            "adb shell mkdir /sdcard/apk"
+            "adb shell rm /sdcard/apk/app-debug.apk "
+            "adb push ${apkoutput.path} /sdcard/apk/app-debug.apk".execute().waitForProcessOutput()
+            'adb shell am start -a "android.intent.action.VIEW" -d "file:///mnt/sdcard/apk/app-debug.apk" -t "application/vnd.android.package-archive"'.execute().waitForProcessOutput()
+            println "install task finish"
+        }
+    }
+}
+def buildTime() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMdd')
+    return formattedDate
+}
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
@@ -69,7 +106,7 @@ dependencies {
 
     implementation dependLib["butterknife"]
     annotationProcessor dependLib["butterknife-compiler"]
-
+/*
     implementation 'com.squareup.okhttp3:okhttp:3.10.0'
     implementation 'com.google.code.gson:gson:2.8.4'
     implementation 'com.squareup.retrofit2:retrofit:2.1.0'
@@ -77,6 +114,25 @@ dependencies {
     implementation 'com.squareup.retrofit2:adapter-rxjava:2.1.0'
     implementation 'io.reactivex:rxandroid:1.2.0'
     implementation "io.reactivex.rxjava2:rxjava:2.1.14"
+
+ */
+    // Retrofit
+    implementation "com.squareup.retrofit2:retrofit:2.3.0"
+    implementation "com.squareup.retrofit2:converter-gson:2.3.0"
+    implementation "com.squareup.retrofit2:adapter-rxjava2:2.3.0"
+
+    // OkHttp3
+    implementation "com.squareup.okhttp3:okhttp:3.10.0"
+    implementation "com.squareup.okhttp3:logging-interceptor:3.10.0"
+
+    // RxJava2
+    implementation "io.reactivex.rxjava2:rxjava:2.1.9"
+    implementation "io.reactivex.rxjava2:rxandroid:2.0.2"
+
+    // RxLifecycle
+    implementation "com.trello.rxlifecycle2:rxlifecycle:2.2.1"
+    implementation "com.trello.rxlifecycle2:rxlifecycle-android:2.2.1"
+    implementation "com.trello.rxlifecycle2:rxlifecycle-components:2.2.1"
 
     implementation 'com.blankj:utilcode:1.20.1'
 
