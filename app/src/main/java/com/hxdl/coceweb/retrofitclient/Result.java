@@ -1,6 +1,6 @@
-package com.hxdl.coceweb.ret;
+package com.hxdl.coceweb.retrofitclient;
 
-public class TeacherInviteQrcodeResult {
+public class Result {
 
     /**
      * errcode : 0000
