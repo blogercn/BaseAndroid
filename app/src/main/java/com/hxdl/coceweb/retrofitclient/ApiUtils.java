@@ -1,7 +1,13 @@
 package com.hxdl.coceweb.retrofitclient;
 
-import java.util.List;
 
+import org.reactivestreams.Subscriber;
+import org.reactivestreams.Subscription;
+
+import io.reactivex.Observer;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.schedulers.Schedulers;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -18,7 +24,7 @@ public class ApiUtils {
         return RetrofitClient.getSingleClient(BASE_URL2).create(ApiService.class);
     }
     public static void main(String[] args) {
-        getApiService().getTeacherInviteQrcode("1111").enqueue(new Callback<Result>() {
+        getApiService2().getTeacherInviteQrcode("1111").enqueue(new Callback<Result>() {
             @Override
             public void onResponse(Call<Result> call, Response<Result> response) {
                 System.out.println(call.request().toString());
@@ -47,6 +53,34 @@ public class ApiUtils {
                 System.out.println(t.toString());
             }
         });
+
+        getApiService2().openLiveSupport2("1111", "2222")
+                //.compose(this.<Result>bindToLifecycle())
+                .subscribeOn(Schedulers.io())
+                //.observeOn(AndroidSchedulers.mainThread())
+                .subscribe(new Observer<Result>(){
+
+                    @Override
+                    public void onSubscribe(Disposable d) {
+
+                    }
+
+                    @Override
+                    public void onNext(Result result) {
+                        System.out.println(result.toString());
+                    }
+
+                    @Override
+                    public void onError(Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onComplete() {
+
+                    }
+                });
+
 
     }
 }
