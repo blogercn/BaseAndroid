@@ -11,8 +11,12 @@ import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Toast;
 
+import org.greenrobot.eventbus.EventBus;
+
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import butterknife.ButterKnife;
+import butterknife.Unbinder;
 
 public abstract class BaseActivity extends AppCompatActivity {
     //获取TAG的activity名称
@@ -26,6 +30,10 @@ public abstract class BaseActivity extends AppCompatActivity {
     //封装Toast对象
     private static Toast toast;
     public Context context;
+
+    private Unbinder mUnbinder;
+
+    private boolean isUserEventBus = true;
 
     @SuppressLint("SourceLockedOrientationActivity")
     @Override
@@ -44,7 +52,23 @@ public abstract class BaseActivity extends AppCompatActivity {
         }
 
         //设置布局
-        setContentView(initLayout());
+        try {
+            int layoutResID = initLayout();
+            //如果initView返回0,框架则不会调用setContentView(),当然也不会 Bind ButterKnife
+            if (layoutResID != 0) {
+                setContentView(layoutResID);
+                //绑定到butterknife
+                mUnbinder = ButterKnife.bind(this);
+                //如果要使用 Eventbus 请将此方法返回 true
+                if (isUserEventBus) {
+                    //注册 Eventbus
+                    EventBus.getDefault().register(this);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         //设置屏幕是否可旋转
         if (!isAllowScreenRoate) {
             setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
@@ -187,5 +211,16 @@ public abstract class BaseActivity extends AppCompatActivity {
         super.onDestroy();
         //activity管理
         ActivityCollector.removeActivity(this);
+
+        if (mUnbinder != null && mUnbinder != Unbinder.EMPTY) {
+            mUnbinder.unbind();
+            this.mUnbinder = null;
+        }
+
+        //如果要使用 Eventbus 请将此方法返回 true
+        if (isUserEventBus) {
+            //解除注册 Eventbus
+            EventBus.getDefault().unregister(this);
+        }
     }
 }
